@@ -1,0 +1,29 @@
+name: Build SharePoint Coexistence SPPKG
+on:
+  push:
+    branches: [spfx/coexistence-sharepoint-package]
+    paths: ['spfx/**', '.github/workflows/build-coexistence-spfx.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  spfx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+        working-directory: spfx
+      - run: npm run prepare-dashboard
+        working-directory: spfx
+      - run: npm run build
+        working-directory: spfx
+      - run: test -s spfx/sharepoint/solution/harrowgreen-coexistence-dashboard.sppkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harrowgreen-coexistence-spfx-sppkg
+          path: spfx/sharepoint/solution/harrowgreen-coexistence-dashboard.sppkg
+          if-no-files-found: error

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "initialPage": "https://harrowgreen.sharepoint.com/sites/Managers2/SitePages/Coexistence-Dashboard.aspx"
+}

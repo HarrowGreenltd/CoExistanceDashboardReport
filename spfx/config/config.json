@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "coexistence-dashboard-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.js",
+          "manifest": "./src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "CoexistenceDashboardWebPartStrings": "lib/webparts/coexistenceDashboard/loc/{locale}.js"
+  }
+}

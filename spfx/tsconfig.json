@@ -1,0 +1,26 @@
+{
+  "extends": "./node_modules/@microsoft/rush-stack-compiler-5.3/includes/tsconfig-web.json",
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "outDir": "lib",
+    "experimentalDecorators": true,
+    "types": [
+      "webpack-env"
+    ],
+    "lib": [
+      "es5",
+      "dom",
+      "es2015",
+      "es2016.array.include",
+      "es2017.object"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
