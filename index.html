@@ -269,6 +269,16 @@ async function generateForecasterFile() {
  button.disabled=true;button.textContent='Generating…';
  const prevRemember=R.remember;
  try {
+   setStatus('Loading published dashboard data','loading');
+   try {
+     const published=await fetch('./coexistence-data.xlsx',{cache:'no-store'});
+     if(published.ok)parseWorkbook(await published.arrayBuffer(),'Published coexistence-data.xlsx');
+     else if(!R.baseBuffer)throw Error('Published coexistence-data.xlsx unavailable');
+   }catch(fetchError){
+     if(!R.baseBuffer)throw Error('The published dashboard workbook could not be loaded: '+fetchError.message);
+     console.warn('Using already loaded local workbook as the finance/capacity basis because the published file was unavailable.',fetchError);
+     R.datasets={};R.sources=[];
+   }
    setStatus('Reading Forecaster source sheets','loading');
    const data=await chosen.arrayBuffer();
    // Sheet selection avoids parsing the very large BC Link / Data Download worksheets.
@@ -337,7 +347,7 @@ async function generateForecasterFile() {
      const a=iso(excelDate(l['Start Date and Time'])),b=iso(excelDate(l['End Date and Time']))||a;
      if(!a||a>maxDate||b<'2026-01-01')continue;
      if(!p){unmappedLeave.push([ref,text(l['Leave Type Name']),a,b,status]);continue}
-     normalLeave.push([p.name,id,a,b>maxDate?maxDate:b,text(l['Leave Type Name']),status,branchCodes[p.home]||p.home]);acceptedLeave++;
+     normalLeave.push([p.name,id,a<'2026-01-01'?'2026-01-01':a,b>maxDate?maxDate:b,text(l['Leave Type Name']),status,branchCodes[p.home]||p.home]);acceptedLeave++;
    }
    const mapBook=asBook('Employee Mapping',XLSX.utils.aoa_to_sheet(mapping));
    const leaveBook=asBook('Leave Normalized',XLSX.utils.aoa_to_sheet(normalLeave));
