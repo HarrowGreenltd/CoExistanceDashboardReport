@@ -8,7 +8,6 @@ const FOLDER='/sites/Managers2/Shared Documents/Coexistence Dashboard';
 const FILE=FOLDER+'/coexistence-data.xlsx';
 const LINK=SITE+'/Shared%20Documents/Forms/AllItems.aspx?id='+encodeURIComponent(FOLDER);
 export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<ICoexistenceDashboardWebPartProps>{
- private _frame:HTMLIFrameElement|undefined;
  private _timer:number|undefined;
  public render():void{
   this.domElement.innerHTML='<div style="font-family:Segoe UI,Arial,sans-serif"><div style="display:flex;align-items:center;justify-content:space-between;gap:9px;padding:10px 0"><strong style="color:#14879c;font-size:18px">Coexistence Dashboard</strong><div><a href="'+LINK+'" target="_blank" rel="noopener noreferrer">Open data folder</a> <button type="button" class="coexistence-reload" style="padding:8px 13px;background:#14879c;color:#fff;border:0;border-radius:7px">Reload data</button></div></div><div class="coexistence-status" role="status" aria-live="polite">Loading data…</div><div class="coexistence-frame"></div></div>';
@@ -47,12 +46,10 @@ export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<I
    },{once:true});
    frame.srcdoc=DASHBOARD_HTML;
    host.appendChild(frame);
-   this._frame=frame;
   }catch(e){this._status('SharePoint workbook unavailable: '+String(e),true)}
  }
  protected onDispose():void{
   if(this._timer!==undefined)window.clearInterval(this._timer);
-  this._frame=undefined;
   super.onDispose();
  }
 }
