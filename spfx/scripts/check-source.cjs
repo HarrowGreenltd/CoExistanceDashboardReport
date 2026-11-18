@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
+const pkg=JSON.parse(read('config/package-solution.json'));
+const manifest=JSON.parse(read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.manifest.json'));
+if(pkg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e'||pkg.solution.features[0].id!=='e70bcffe-ef1c-47b3-9339-19102bb2eb61'||manifest.id!=='1f11da6f-4a1a-45c4-ac4b-ca68427312ce')throw Error('Original IDs changed');
+if(pkg.solution.version!=='1.0.0.6'||JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Unexpected version or host');
+const webpart=read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.ts'),runtime=read('src/webparts/coexistenceDashboard/dashboardRuntime.js'),markup=read('src/webparts/coexistenceDashboard/dashboardMarkup.ts');
+if(/srcdoc|createElement\s*\(\s*['"]iframe/.test(webpart)||/eval\s*\(|new Function\s*\(/.test(runtime))throw Error('CSP-unsafe script loader');
+if(!webpart.includes('initializeDashboard(workbook,shadow)')||!runtime.includes('generateForecasterFile')||!runtime.includes('parseWorkbook(workbook.slice(0)'))throw Error('Features not wired');
+if(/<script\b/i.test(markup))throw Error('Script tag found in dashboard markup');
+console.log('Original IDs, safe loader, generated features, and v1.0.0.6 source checks passed.');

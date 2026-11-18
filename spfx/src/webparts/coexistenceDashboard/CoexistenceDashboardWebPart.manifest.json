@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
-  "id": "83fca387-21d9-4f6c-b7e3-b125ca62af8d",
+  "id": "1f11da6f-4a1a-45c4-ac4b-ca68427312ce",
   "alias": "CoexistenceDashboardWebPart",
   "componentType": "WebPart",
   "version": "*",

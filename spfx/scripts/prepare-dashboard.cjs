@@ -1,34 +1,24 @@
-
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
-const SHA='ddc3a2a2361f8001d643b47262e3f4435a38f3c0';
-const RAW='https://raw.githubusercontent.com/HarrowGreenltd/CoExistanceDashboardReport/'+SHA+'/index.html';
-const XLSX='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-async function get(url){const r=await fetch(url);if(!r.ok)throw Error('HTTP '+r.status+' '+url);return r.text()}
-(async()=>{
- let html=await get(RAW);
- if(!html.includes('generateForecasterFile')||!html.includes('coexistence-data.xlsx'))throw Error('Wrong dashboard revision');
- const lib=await get(XLSX);
- if(lib.length<100000)throw Error('Spreadsheet reader download failed.');
- const tag=/<script\s+src=["']https:\/\/cdn\.jsdelivr\.net\/npm\/xlsx@0\.18\.5\/dist\/xlsx\.full\.min\.js["']\s*><\/script>/i;
- if(!tag.test(html))throw Error('Expected XLSX script tag missing.');
- html=html.replace(tag,'<script>'+lib.replace(/<\/script/gi,'<\\/script')+'</script>');
- const startup=/\nloadDefault\(\);\s*\n<\/script>/;
- if(!startup.test(html))throw Error('Dashboard startup hook changed.');
- html=html.replace(startup,'\n/* Loaded by SharePoint SPFx host */\n</script>');
- const shim=[
- '<script>','(function(){','var original=window.fetch.bind(window);',
- 'window.fetch=function(input,options){',
- 'var url=typeof input==="string"?input:(input&&input.url)||"";',
- 'if(/^(?:\\.\\/)?coexistence-data\\.xlsx(?:[?#]|$)/i.test(url)){',
- 'var data=window.__HG_Coexistence_SharePoint_File;',
- 'if(!data)return Promise.reject(new Error("SharePoint Coexistence workbook not loaded."));',
- 'return Promise.resolve(new Response(data.slice(0),{status:200,headers:{"Content-Type":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}}));',
- '}','return original(input,options);','};','})();','</script>'
- ].join('\n');
- if(!html.includes('</head>'))throw Error('Dashboard document head not found.');
- html=html.replace('</head>',shim+'\n</head>');
- const target=path.resolve(__dirname,'../src/webparts/coexistenceDashboard/dashboardMarkup.ts');
- fs.writeFileSync(target,'export const DASHBOARD_HTML:string='+JSON.stringify(html)+';\n');
- console.log('Embedded pinned Coexistence dashboard ('+html.length+' characters).');
-})().catch(e=>{console.error(e);process.exitCode=1});
+const ROOT=path.resolve(__dirname,'..');
+const html=fs.readFileSync(path.join(ROOT,'dashboard-source.html'),'utf8');
+if(!html.includes('generateForecasterFile')||!html.includes('coexistence-data.xlsx'))throw Error('Pinned dashboard source missing required features');
+const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+if(scripts.length!==2||!scripts[0][1].includes('xlsx')||!scripts[1][2].includes('function parseWorkbook'))throw Error('Unexpected dashboard script structure');
+let app=scripts[1][2];
+if(!/\bloadDefault\(\);\s*$/.test(app))throw Error('Expected original startup hook missing');
+app=app.replace(/\bloadDefault\(\);\s*$/,'');
+app=app.replace(/\bdocument\.getElementById\s*\(/g,'root.getElementById(').replace(/\bdocument\.querySelectorAll\s*\(/g,'root.querySelectorAll(');
+if(/\bdocument\.(?:getElementById|querySelectorAll)/.test(app))throw Error('Unscoped dashboard selector');
+const styles=[...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(x=>x[1]);
+if(!styles.length)throw Error('Expected CSS not found');
+const css=styles.join('\n').replace(/:root\s*\{/g,':host{').replace(/\bbody\s*\{/g,'.hg-coex-view{');
+const match=html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i);
+if(!match)throw Error('Dashboard body not found');
+const body=match[1].replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+if(/<script\b/i.test(body)||!body.includes('forecasterGenerateButton'))throw Error('Unexpected dashboard body content');
+const dest=path.join(ROOT,'src/webparts/coexistenceDashboard');
+fs.writeFileSync(path.join(dest,'dashboardMarkup.ts'),'export const DASHBOARD_BODY:string='+JSON.stringify(body)+';\nexport const DASHBOARD_CSS:string='+JSON.stringify(css)+';\n');
+const runtime="import * as XLSX from 'xlsx';\nexport function initializeDashboard(workbook,root){\nif(!XLSX||!XLSX.read)throw new Error('XLSX library missing');\n"+app+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n}\n";
+fs.writeFileSync(path.join(dest,'dashboardRuntime.js'),runtime);
+console.log('Generated CSP-compatible dashboard bundle sources from pinned HTML.');

@@ -1,55 +1,42 @@
-
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPHttpClient } from '@microsoft/sp-http';
-import { DASHBOARD_HTML } from './dashboardMarkup';
+import { DASHBOARD_BODY, DASHBOARD_CSS } from './dashboardMarkup';
+import { initializeDashboard } from './dashboardRuntime';
+
 export interface ICoexistenceDashboardWebPartProps {}
 const SITE='https://harrowgreen.sharepoint.com/sites/Managers2';
 const FOLDER='/sites/Managers2/Shared Documents/Coexistence Dashboard';
 const FILE=FOLDER+'/coexistence-data.xlsx';
 const LINK=SITE+'/Shared%20Documents/Forms/AllItems.aspx?id='+encodeURIComponent(FOLDER);
 export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<ICoexistenceDashboardWebPartProps>{
- private _timer:number|undefined;
- public render():void{
-  this.domElement.innerHTML='<div style="font-family:Segoe UI,Arial,sans-serif"><div style="display:flex;align-items:center;justify-content:space-between;gap:9px;padding:10px 0"><strong style="color:#14879c;font-size:18px">Coexistence Dashboard</strong><div><a href="'+LINK+'" target="_blank" rel="noopener noreferrer">Open data folder</a> <button type="button" class="coexistence-reload" style="padding:8px 13px;background:#14879c;color:#fff;border:0;border-radius:7px">Reload data</button></div></div><div class="coexistence-status" role="status" aria-live="polite">Loading data…</div><div class="coexistence-frame"></div></div>';
-  (this.domElement.querySelector('.coexistence-reload') as HTMLButtonElement).addEventListener('click',()=>{void this._load()});
-  void this._load();
- }
- private _status(text:string,error:boolean=false):void{
-  const el=this.domElement.querySelector('.coexistence-status') as HTMLElement;
-  if(el){el.textContent=text;el.style.color=error?'#ad3d4a':'#505759'}
- }
- private async _load():Promise<void>{
-  try {
-   this._status('Reading Shared Documents / Coexistence Dashboard / coexistence-data.xlsx…');
-   const endpoint=SITE+"/_api/web/GetFileByServerRelativePath(decodedUrl=@file)/$value?@file='"+encodeURIComponent(FILE)+"'";
-   const result=await this.context.spHttpClient.get(endpoint,SPHttpClient.configurations.v1,{headers:{Accept:'application/octet-stream'}});
-   if(!result.ok)throw Error('SharePoint HTTP '+result.status+' — check folder spelling and access.');
-   const workbook=await result.arrayBuffer();
-   if(workbook.byteLength<100)throw Error('The workbook is empty.');
-   if(this._timer!==undefined){window.clearInterval(this._timer);this._timer=undefined}
-   const host=this.domElement.querySelector('.coexistence-frame') as HTMLDivElement;
-   host.innerHTML='';
-   const frame=document.createElement('iframe');
-   frame.title='Coexistence Dashboard';
-   frame.style.cssText='width:100%;height:1400px;border:0;display:block;background:#f4f4f4';
-   frame.addEventListener('load',()=>{
-     try{
-      const win=frame.contentWindow as any;
-      win.__HG_Coexistence_SharePoint_File=workbook.slice(0);
-      if(typeof win.parseWorkbook!=='function')throw Error('The dashboard script did not load.');
-      win.parseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');
-      this._status('Live SharePoint source: Shared Documents / Coexistence Dashboard / coexistence-data.xlsx');
-      this._timer=window.setInterval(()=>{
-        try{const doc=frame.contentDocument;if(doc&&doc.body)frame.style.height=Math.max(1000,Math.min(18000,doc.body.scrollHeight+60))+'px'}catch(e){}
-      },1200);
-     }catch(e){this._status('Dashboard startup failed: '+String(e),true)}
-   },{once:true});
-   frame.srcdoc=DASHBOARD_HTML;
-   host.appendChild(frame);
-  }catch(e){this._status('SharePoint workbook unavailable: '+String(e),true)}
- }
- protected onDispose():void{
-  if(this._timer!==undefined)window.clearInterval(this._timer);
-  super.onDispose();
- }
+  private _loadSerial:number=0;
+  public render():void{
+    this.domElement.innerHTML='<div class="hg-coex-host"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0"><strong style="color:#14879c">Coexistence Dashboard</strong><span>SPFx 1.0.0.6</span><a href="'+LINK+'" target="_blank" rel="noopener noreferrer">Open data folder</a><button class="hg-coex-reload" type="button">Reload data</button></div><div class="hg-coex-status" role="status" aria-live="polite">Loading workbook…</div><div class="hg-coex-dashboard"></div></div>';
+    (this.domElement.querySelector('.hg-coex-reload') as HTMLButtonElement).addEventListener('click',()=>void this._load());
+    void this._load();
+  }
+  private _status(message:string,error:boolean=false):void{
+    const el=this.domElement.querySelector('.hg-coex-status') as HTMLElement;
+    if(el){el.textContent=message;el.style.color=error?'#b91c1c':'#40545d';}
+  }
+  private async _load():Promise<void>{
+    const serial=++this._loadSerial;
+    try{
+      this._status('Reading SharePoint Coexistence workbook…');
+      const endpoint=SITE+"/_api/web/GetFileByServerRelativePath(decodedUrl=@file)/$value?@file='"+encodeURIComponent(FILE)+"'";
+      const response=await this.context.spHttpClient.get(endpoint,SPHttpClient.configurations.v1,{headers:{Accept:'application/octet-stream'}});
+      if(!response.ok)throw new Error('SharePoint workbook request HTTP '+response.status);
+      const workbook=await response.arrayBuffer();
+      if(serial!==this._loadSerial)return;
+      if(workbook.byteLength<100)throw new Error('Workbook appears empty.');
+      const host=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;
+      if(host.shadowRoot)host.shadowRoot.innerHTML='';
+      const shadow=host.shadowRoot||host.attachShadow({mode:'open'});
+      const style=document.createElement('style');style.textContent=DASHBOARD_CSS;shadow.appendChild(style);
+      const view=document.createElement('div');view.className='hg-coex-view';view.innerHTML=DASHBOARD_BODY;shadow.appendChild(view);
+      initializeDashboard(workbook,shadow);
+      this._status('Live SharePoint source: Coexistence Dashboard/coexistence-data.xlsx');
+    }catch(error){if(serial===this._loadSerial)this._status('Dashboard startup failed: '+String(error),true);}
+  }
+  protected onDispose():void{this._loadSerial++;super.onDispose();}
 }
