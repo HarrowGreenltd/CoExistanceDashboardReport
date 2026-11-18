@@ -1,0 +1,6 @@
+# Coexistence Dashboard v1.0.0.7 — GitHub parity candidate
+Source is copied from the main branch of HarrowGreenltd/CoExistanceDashboardReport at commit e05bb2a7903a97bf8a5d8958c066bf434ff9b932 (18 November 2026 inspection), including the associated hr-rules.js.
+This candidate includes its daily capacity, employee-date, ADP approved leave, agency spending and audit safeguards in the SPFx bundle, using the same rules and calculations as the GitHub version.
+Important: The published SharePoint coexistence-data.xlsx MUST contain the four independent overlay sheets: Capacity Daily, Employment Months, ADP Approved Dates, Agency Spend. The older September workbook did not have these sheets. To prevent misleading figures the dashboard refuses to report "equivalent" results without them. Do not infer financial/contracted capacity from operational activity alone.
+The original solution, feature and component IDs are retained and supportedHosts remains SharePointWebPart to avoid the previous install regression. No changes are made to main or SharePoint automatically.
+Run GitHub Actions workflow Build Coexistence SPFx v1.0.0.7 to compile an actual package. Validate in test site, then check by branch/date/customer filter against the SAME workbook in the GitHub version and the SharePoint version.
