@@ -7,6 +7,7 @@ if(pkg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e'||pkg.solution.featur
 if(pkg.solution.version!=='1.0.0.7'||JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Unexpected version or host settings');
 const runtime=read('src/webparts/coexistenceDashboard/dashboardRuntime.js'),markup=read('src/webparts/coexistenceDashboard/dashboardMarkup.ts'),webpart=read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.ts');
 if(/srcdoc|createElement\s*\(\s*['"]iframe/.test(webpart)||/<script\b/i.test(markup))throw Error('CSP-unsafe inline HTML loader remains');
-for(const t of ['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','Current safeguards','renderAuditSummary','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(t))throw Error('Missing live GitHub logic: '+t);
+for(const t of ['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','renderAuditSummary','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(t))throw Error('Missing live GitHub logic: '+t);
+if(!markup.includes('Current safeguards'))throw Error('Current safeguards markup missing');
 if(!runtime.includes('root.querySelectorAll')||!webpart.includes('1.0.0.7'))throw Error('Missing Shadow DOM scoping or version label');
 console.log('Version 1.0.0.7 IDs, bundled GitHub parity logic, CSP safety, and required workbook sheet validation passed.');
