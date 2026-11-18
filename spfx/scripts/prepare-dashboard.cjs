@@ -14,6 +14,7 @@ app=app.replace(/loadDefault\(\);\s*$/,'');
 const scope=s=>s.replace(/\bdocument\.getElementById\s*\(/g,'root.getElementById(').replace(/\bdocument\.querySelectorAll\s*\(/g,'root.querySelectorAll(').replace(/\bdocument\.querySelector\s*\(/g,'root.querySelector(');
 app=scope(app);
 const hrCode=scope(overlay);
+const basisCode=fs.readFileSync(path.join(root,'utilisation-basis-source.js'),'utf8');
 const styles=[...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(x=>x[1]);
 if(!styles.length)throw Error('GitHub dashboard styles missing');
 const css=styles.join('\n').replace(/:root\s*\{/g,':host{').replace(/\bbody\s*\{/g,'.hg-coex-view{')+'\n.pills{flex-wrap:wrap!important;overflow:visible!important;white-space:normal!important}.field.branch-field{min-width:0}';
@@ -28,6 +29,6 @@ const runtime="import * as XLSX from 'xlsx';\nexport function initializeDashboar
 "const required=['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend'];\n"+
 "const missing=required.filter(n=>!book.SheetNames.includes(n));\n"+
 "if(missing.length)throw new Error('The published workbook does not include GitHub parity data sheets: '+missing.join(', ')+'. Please publish a validated workbook containing these sheets; reporting cannot be treated as equivalent without them.');\n"+
-app+"\n"+hrCode+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n}\n";
+app+"\n"+hrCode+"\n"+basisCode+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n}\n";
 fs.writeFileSync(path.join(dest,'dashboardRuntime.js'),runtime);
 console.log('Pinned live GitHub dashboard and HR overlay compiled into SPFx runtime; required sheet validation enabled.');

@@ -1,0 +1,6 @@
+# Dual utilisation selection — v1.0.0.8 test candidate
+The approved seven-day eligible-fixed-person rule is retained, unchanged, as the default.
+The second view uses validated positive Weekly Hours (reference only) from HR Register and fixed status/eligibility from Employment Months. Approved ADP dates remove 1/7 of weekly hours each eligible date; a complete seven-day week can never exceed contractual weekly hours. Activity work hours are counted only on eligible non-absence fixed-person dates. Hours numerator is capped per employee-week, with excess recorded separately. Missing or anomalous contract hours are excluded, never assumed to be 45.
+The selector changes utilisation, opportunity matrix X-axis and weekly trend. It adds basis-specific capacity panels on Overview, Branches, People, Individual, Jobs & Customers, and Refresh Data. Person-day totals and agency spending remain original source-based units, with no invalid mixing of hours and days; cost savings remain unverified.
+Branch-specific matching remains in force; this does NOT introduce cross-branch savings. No changes to SharePoint are automatic.
+This is a preliminary modelling convention, not a contractual/payroll validation. A full interactive test against the October workbook and review of the HR work-pattern/absence treatment are needed before production deployment.

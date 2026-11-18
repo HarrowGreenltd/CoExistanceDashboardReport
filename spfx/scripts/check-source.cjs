@@ -4,10 +4,10 @@ const root=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p
 const pkg=JSON.parse(read('config/package-solution.json'));
 const manifest=JSON.parse(read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.manifest.json'));
 if(pkg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e'||pkg.solution.features[0].id!=='e70bcffe-ef1c-47b3-9339-19102bb2eb61'||manifest.id!=='1f11da6f-4a1a-45c4-ac4b-ca68427312ce')throw Error('Original app identity changed');
-if(pkg.solution.version!=='1.0.0.7'||JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Unexpected version or host settings');
+if(pkg.solution.version!=='1.0.0.8'||JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Unexpected version or host settings');
 const runtime=read('src/webparts/coexistenceDashboard/dashboardRuntime.js'),markup=read('src/webparts/coexistenceDashboard/dashboardMarkup.ts'),webpart=read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.ts');
 if(/srcdoc|createElement\s*\(\s*['"]iframe/.test(webpart)||/<script\b/i.test(markup))throw Error('CSP-unsafe inline HTML loader remains');
-for(const t of ['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','renderAuditSummary','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(t))throw Error('Missing live GitHub logic: '+t);
+for(const t of ['hgUtilBasis','selectHours','hoursById','Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','renderAuditSummary','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(t))throw Error('Missing live GitHub logic: '+t);
 if(!markup.includes('Current safeguards'))throw Error('Current safeguards markup missing');
-if(!runtime.includes('root.querySelectorAll')||!webpart.includes('1.0.0.7'))throw Error('Missing Shadow DOM scoping or version label');
-console.log('Version 1.0.0.7 IDs, bundled GitHub parity logic, CSP safety, and required workbook sheet validation passed.');
+if(!runtime.includes('root.querySelectorAll')||!webpart.includes('1.0.0.8'))throw Error('Missing Shadow DOM scoping or version label');
+console.log('Version 1.0.0.8 IDs, bundled GitHub parity logic, CSP safety, and required workbook sheet validation passed.');

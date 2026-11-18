@@ -1,0 +1,30 @@
+name: Build Coexistence SPFx v1.0.0.8 dual utilisation
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/coexistence-dual-utilisation-v1.0.0.8]
+    paths: ['spfx/**', '.github/workflows/build-coexistence-v1.0.0.8.yml']
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: spfx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate and test dashboard source
+        run: npm run prepare-dashboard && npm run check && node --check src/webparts/coexistenceDashboard/dashboardRuntime.js
+      - name: Official SPFx build
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Coexistence-Dashboard-v1.0.0.8-sppkg
+          path: spfx/sharepoint/solution/*.sppkg
+          if-no-files-found: error
