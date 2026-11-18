@@ -16,7 +16,7 @@ app=scope(app);
 const hrCode=scope(overlay);
 const styles=[...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(x=>x[1]);
 if(!styles.length)throw Error('GitHub dashboard styles missing');
-const css=styles.join('\n').replace(/:root\s*\{/g,':host{').replace(/\bbody\s*\{/g,'.hg-coex-view{');
+const css=styles.join('\n').replace(/:root\s*\{/g,':host{').replace(/\bbody\s*\{/g,'.hg-coex-view{')+'\n.pills{flex-wrap:wrap!important;overflow:visible!important;white-space:normal!important}.field.branch-field{min-width:0}';
 const body=html.match(/<body\b[^>]*>([\s\S]*?)<\/body>/i)?.[1];
 if(!body)throw Error('Dashboard body missing');
 const cleaned=body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
