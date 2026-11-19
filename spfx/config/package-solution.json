@@ -1,0 +1,21 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "harrowgreen-coexistence-dashboard-client-side-solution",
+    "id": "4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e",
+    "version": "1.0.0.7",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "features": [
+      {
+        "title": "Coexistence Dashboard",
+        "description": "SPFx Coexistence workbook dashboard",
+        "id": "e70bcffe-ef1c-47b3-9339-19102bb2eb61",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/harrowgreen-coexistence-dashboard.sppkg"
+  }
+}
