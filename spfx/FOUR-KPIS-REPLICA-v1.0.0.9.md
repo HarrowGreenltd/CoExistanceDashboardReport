@@ -1,0 +1,6 @@
+# SharePoint Four KPIs v3 (SPFx v1.0.0.9) — exact model port
+The five runtime files and workbook come unchanged from attached HG_Coexistence_Dashboard_Four_KPIs_Sourcev3.zip. Their Git blob hashes are pinned in spfx/scripts/prepare-dashboard.cjs; any later edits to GitHub main fail the build rather than alter the approved financial model silently.
+The webpack bundle uses the same index.html inline logic followed in order by hr-rules.js, hr-hours.js, coexistence.js and workers-filter.js, without iframe/srcdoc or runtime inline scripts. Only document element selector calls are scoped to the dashboard Shadow DOM. The spreadsheet parser uses the selected SharePoint workbook and does not fetch a public GitHub workbook.
+CRITICAL: publish the supplied 5.876MB coexistence-data.xlsx to /sites/Managers2/Shared Documents/Coexistence Dashboard/coexistence-data.xlsx (restricted to permitted staff). The earlier October workbook is a different data version. Do NOT publish the identifying workbook into GitHub Pages or a public CDN.
+Original solution, feature and web-part IDs are unchanged. The host declaration is retained as SharePointWebPart for established full-page host compatibility.
+No deployment is automated. The attached-source model's reference values and supplied tests are the expected controls. Full interactive SharePoint acceptance is still required.
