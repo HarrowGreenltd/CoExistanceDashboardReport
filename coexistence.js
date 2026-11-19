@@ -6,6 +6,7 @@
 const state={ready:false,rows:[],threshold:0,basis:'days',dayHours:new Map(),staff:null,error:''};
 const toNum=v=>Number.isFinite(Number(v))?Number(v):0;
 const currency=v=>gbp.format(Math.round((v+1e-7)*100)/100);
+const moneyExact=new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',minimumFractionDigits:2,maximumFractionDigits:2});
 const zero={qualified:0,covered:0,missing:0,capacity:0,worked:0,unused:0,matchedHours:0,otherHours:0,
   potential:0,structural:0,adjustments:0,billed:0,matchedPermanent:0,otherPermanent:0,coexist:0,paidHours:0,ctPaidHours:0};
 const required=['Week ending','Week starting','Branch','Indicative region','Net contracted hours','Matched permanent worked hours',
@@ -18,14 +19,21 @@ function buildControls(){
   if(before){
    const section=document.createElement('section');section.id='coexHeadline';section.className='coex-headline';
    section.setAttribute('aria-label','Headline cost and reduction opportunity');
-   section.innerHTML=`<div class="coex-financial-title"><h3>Deployment cost and capacity</h3><span>Complete CT-costed weeks · selected branch and period</span></div>
+   section.innerHTML=`<div class="coex-financial-title"><h3>Where our labour costs sit</h3><span>Selected branch and CT-costed weeks</span></div>
     <div class="coex-financial-grid">
-    <article class="panel coex-financial-card primary"><span class="label">1. Underutilised permanent capacity <span class="modelled">Cost proxy</span></span><div class="value" id="coexPermCost">—</div><p class="coex-card-volume" id="coexPermVolume">—</p><p class="note">All unused contracted permanent capacity, whether or not agency was deployed.</p></article>
-    <article class="panel coex-financial-card"><span class="label">2. Agency expenditure <span class="modelled">CT billed</span></span><div class="value" id="coexAgencySpend">—</div><p class="coex-card-volume" id="coexAgencyVolume">—</p><p class="note">Worker-days and hours from unit count; billed spend from CT, with differences shown separately.</p></article>
-    <article class="panel coex-financial-card opportunity"><span class="label">3. Coexistence cost <span class="modelled">Modelled</span></span><div class="value" id="coexHeadlineCost">—</div><p class="coex-card-volume" id="coexCoexistVolume">—</p><p class="note">Matched unused permanent capacity plus associated agency cost. Agency reduction opportunity: <strong id="coexReduction">—</strong>.</p></article>
-    <article class="panel coex-financial-card"><span class="label">4. Other permanent underutilisation <span class="modelled">Cost proxy</span></span><div class="value" id="coexOtherHeadline">—</div><p class="coex-card-volume" id="coexOtherVolume">—</p><p class="note">Unused permanent capacity not matched to agency; excludes the permanent portion of coexistence.</p></article>
-    </div><div class="coex-inefficiency-bar"><span>Total inefficiency exposure <small>permanent underutilisation + matched agency cost</small></span><strong id="coexInefficiency">—</strong></div><p class="coex-financial-foot" id="coexFinancialFoot">The agency reduction opportunity is already inside coexistence cost. The four cards must not be added together.</p>`;
+    <article class="panel coex-financial-card primary"><div class="coex-label-row"><span class="label">1. Unused permanent capacity</span><button class="coex-info" type="button" title="Estimated cost of permanent contracted hours not deployed on jobs, after approved absence. Includes both matched and other unused capacity." aria-label="About unused permanent capacity">i</button></div><div class="value" id="coexPermCost">—</div><p class="coex-card-volume" id="coexPermVolume">—</p><p class="note">Permanent hours paid for but not deployed.</p></article>
+    <article class="panel coex-financial-card"><div class="coex-label-row"><span class="label">2. Total agency spend</span><button class="coex-info" type="button" title="All agency costs billed by CT for complete costed weeks. Recorded worker-days and deployment hours come from unit count, which is separately reconciled to CT." aria-label="About total agency spend">i</button></div><div class="value" id="coexAgencySpend">—</div><p class="coex-card-volume" id="coexAgencyVolume">—</p><p class="note">Total billed agency labour, including work with no overlap.</p></article>
+    <article class="panel coex-financial-card opportunity"><div class="coex-label-row"><span class="label">3. Overlapping labour cost</span><button class="coex-info" type="button" title="Combined modelled cost of unused permanent hours plus associated agency expenditure in the same branch and week. This is not a confirmed saving." aria-label="About overlapping labour cost">i</button></div><div class="value" id="coexHeadlineCost">—</div><p class="coex-card-volume" id="coexCoexistVolume">—</p><p class="note">Spare permanent hours alongside agency use in the same week.</p></article>
+    <article class="panel coex-financial-card"><div class="coex-label-row"><span class="label">4. Other unused permanent time</span><button class="coex-info" type="button" title="Permanent capacity that was not deployed and was not matched against agency activity in the same branch and week. It is a subset of card 1." aria-label="About other unused permanent time">i</button></div><div class="value" id="coexOtherHeadline">—</div><p class="coex-card-volume" id="coexOtherVolume">—</p><p class="note">Spare permanent hours without matched agency use.</p></article>
+    </div>
+    <div class="coex-bridge panel" aria-label="Labour cost exposure calculation">
+     <div class="coex-bridge-heading"><div><h3>Total identified labour cost exposure</h3><p>What we pay for without full deployment, plus agency work matched to that spare capacity.</p></div><span class="modelled">Modelled exposure</span></div>
+     <div class="coex-bridge-steps"><div class="coex-bridge-part"><span>Unused permanent capacity</span><strong id="coexBridgePerm">—</strong></div><span class="coex-bridge-symbol" aria-hidden="true">+</span><div class="coex-bridge-part"><span>Agency spend in overlap <small>Potential reduction</small></span><strong id="coexReduction">—</strong></div><span class="coex-bridge-symbol" aria-hidden="true">=</span><div class="coex-bridge-part coex-bridge-total"><span>Total cost exposure</span><strong id="coexInefficiency">—</strong></div></div>
+     <p class="coex-bridge-check" id="coexBridgeCheck">Also reconciles to overlapping labour cost + other unused permanent time.</p>
+    </div>
+    <div class="coex-financial-foot"><span id="coexFinancialFoot">These are modelled costs, not confirmed cash savings.</span><button type="button" class="coex-method-link" id="coexGoMethodology">Assumptions &amp; Calculations</button></div>`;
    before.insertAdjacentElement('beforebegin',section);
+   el('coexGoMethodology')?.addEventListener('click',()=>switchTab('methodology'));
    for(const id of ['exCoexist','exAvoidable']){const card=el(id)?.closest('.kpi');if(card)card.style.display='none';}
    before.style.gridTemplateColumns='repeat(3,minmax(0,1fr))';
   }
@@ -47,15 +55,15 @@ function buildControls(){
    el('coexBasis').addEventListener('change',e=>{state.basis=e.target.value==='hours'?'hours':'days';filter();});}
  }
  if(!el('coexPanels')){
-  const after=document.querySelector('#view-executive .kpis.insight-five');
-  if(after){const panel=document.createElement('section');panel.id='coexPanels';panel.className='coex-panels';
+  const destination=el('view-methodology');
+  if(destination){const panel=document.createElement('section');panel.id='coexPanels';panel.className='coex-panels';
    panel.innerHTML=`<article class="panel coex-panel"><div class="coex-card-head"><h3>Agency cost allocation</h3><span>CT worked-week costs</span></div>
     <div class="coex-value" id="coexAgencyTotal">—</div><div class="coex-bar" id="coexAgencyBar"></div><div id="coexAgencyRows" class="coex-legend"></div>
-    <p class="coex-caveat">Capacity-unmatched is provisionally structural, not proven necessary. Non-hourly adjustments remain unallocated.</p></article>
+    <p class="coex-caveat">Billed agency cost split by its modelled allocation. See Assumptions &amp; Calculations for the rules.</p></article>
     <article class="panel coex-panel"><div class="coex-card-head"><h3>Permanent underutilisation</h3><span>Hours priced at historical branch proxies</span></div>
     <div class="coex-value" id="coexUnusedTotal">—</div><div class="coex-bar" id="coexPermanentBar"></div><div id="coexPermanentRows" class="coex-legend"></div>
-    <p class="coex-caveat">Unused contractual hours are not proof of avoidable salary cost. Separate matched and other spare capacity.</p></article>`;
-   after.insertAdjacentElement('afterend',panel);}
+    <p class="coex-caveat">Matched and other unused costs together equal the permanent capacity total in card 1.</p></article>`;
+   destination.appendChild(panel);}
  }
  if(!el('coexOtherCost')){
   const branchArea=el('view-branch')?.querySelector('.kpis');
@@ -240,31 +248,42 @@ function coverageNotes(rows){const valid=rows.filter(x=>x.covered),any=rows.leng
  return !valid.length?'No CT data':valid.length<rows.length?'Partial CT coverage':'Complete CT coverage';}
 function update(){
  const root=el('view-executive');
- if(!state.ready){for(const id of ['exCoexist','exAvoidable','brCoexist','coexOtherCost','coexInefficiency','coexHeadlineCost','coexReduction','coexOtherHeadline','coexPermCost','coexAgencySpend'])if(el(id))setMetric(id,'Not validated');return;}
+ if(!state.ready){for(const id of ['exCoexist','exAvoidable','brCoexist','coexOtherCost','coexInefficiency','coexHeadlineCost','coexReduction','coexOtherHeadline','coexPermCost','coexAgencySpend'])if(el(id))setMetric(id,'Not validated');for(const id of ['coexBridgePerm','methodUnused','methodMatchedPerm','methodAgencyOpp','methodCoexist','methodOther','methodExposure','methodSpend'])if(el(id))el(id).textContent='Not validated';return;}
  const selected=selection(),covered=selected.filter(x=>x.covered).map(calculated),t=total(covered),internalOnly=S.restoreMode==='only';
  const noData=!covered.length,coverage=coverageNotes(selected),display=internalOnly?'n.a.':noData?'No CT data':null;
  const basisNote=state.basis==='days'?'Deployed person-days × 9 hours':'Recorded actual worked hours';
  const agencyDays=agencyPersonDays(covered);
+ // Make the displayed bridge reconcile to the penny, even when its source
+ // components were aggregated with fractional pennies across branch-weeks.
+ const bridgePermanent=Math.round((t.matchedPermanent+t.otherPermanent)*100)/100;
+ const bridgeAgency=Math.round(t.potential*100)/100;
+ const bridgeTotal=Math.round((bridgePermanent+bridgeAgency)*100)/100;
  const setCost=(id,v)=>{if(el(id))setMetric(id,display||currency(v))};
  setCost('exCoexist',t.coexist);setCost('exAvoidable',t.potential);setCost('brCoexist',t.coexist);setCost('coexOtherCost',t.otherPermanent);
- setCost('coexInefficiency',t.coexist+t.otherPermanent);
+ if(el('coexInefficiency'))el('coexInefficiency').textContent=display||moneyExact(bridgeTotal);
  setCost('coexHeadlineCost',t.coexist);
- setCost('coexReduction',t.potential);
+ if(el('coexReduction'))el('coexReduction').textContent=display||moneyExact(bridgeAgency);
  setCost('coexOtherHeadline',t.otherPermanent);
  setCost('coexPermCost',t.matchedPermanent+t.otherPermanent);
  setCost('coexAgencySpend',t.billed);
+ if(el('coexBridgePerm'))el('coexBridgePerm').textContent=display||moneyExact(bridgePermanent);
  const setVolume=(id,v)=>{if(el(id))el(id).textContent=display||v};
- const equivalence=h=>`${num.format(h)} hrs · ${num.format(h/9)} days (9h equivalents)`;
+ const equivalence=h=>`${num.format(h)} hours · ${num.format(h/9)} nine-hour day equivalents`;
  setVolume('coexPermVolume',equivalence(t.unused));
- setVolume('coexAgencyVolume',`${whole.format(agencyDays)} actual worker-days · ${num.format(t.paidHours)} unit-count hrs`);
- setVolume('coexCoexistVolume',`${equivalence(t.matchedHours)} of matched spare capacity`);
+ setVolume('coexAgencyVolume',`${whole.format(agencyDays)} agency worker-days · ${num.format(t.paidHours)} recorded hours`);
+ setVolume('coexCoexistVolume',equivalence(t.matchedHours));
  setVolume('coexOtherVolume',equivalence(t.otherHours));
+ if(el('coexBridgeCheck'))el('coexBridgeCheck').textContent=display||`Cross-check: ${currency(t.coexist)} overlapping labour cost + ${currency(t.otherPermanent)} other unused permanent time = ${currency(t.coexist+t.otherPermanent)}.`;
+ const methodMoney={methodUnused:bridgePermanent,methodMatchedPerm:t.matchedPermanent,methodAgencyOpp:bridgeAgency,methodCoexist:t.coexist,methodOther:t.otherPermanent,methodExposure:bridgeTotal,methodSpend:t.billed};
+ for(const [id,value] of Object.entries(methodMoney))if(el(id))el(id).textContent=display||moneyExact(value);
+ if(el('methodScope'))el('methodScope').textContent=`${S.branch==='All'?'All branches':S.branch} · ${dateLabel(S.from||S.min)}–${dateLabel(S.to||S.max)} · ${basisNote}`;
+ if(el('methodVariance'))el('methodVariance').textContent=display||`${num.format(t.paidHours)} deployed agency hours against ${num.format(t.ctPaidHours)} CT billed hours: ${num.format(t.paidHours-t.ctPaidHours)} hours net difference.`;
  if(el('coexReconciliation'))el('coexReconciliation').style.display=internalOnly?'none':'block';
  if(el('coexReconcileSummary'))el('coexReconcileSummary').innerHTML=`<span>Unit-count agency <strong>${num.format(t.paidHours)} hrs</strong></span><span>CT hourly billed <strong>${num.format(t.ctPaidHours)} hrs</strong></span><span>Net difference <strong>${num.format(t.paidHours-t.ctPaidHours)} hrs</strong></span><span>Recorded agency <strong>${whole.format(agencyDays)} worker-days</strong></span>`;
  const variances=covered.filter(r=>Math.abs(r.paidHours-r.ctPaidHours)>0.01).sort((a,b)=>Math.abs(b.paidHours-b.ctPaidHours)-Math.abs(a.paidHours-a.ctPaidHours));
  if(el('coexReconcileMeta'))el('coexReconcileMeta').textContent=`${whole.format(variances.length)} branch-weeks differ by over 0.01 hours. Showing the 25 largest differences; export contains all costed branch-weeks.`;
  if(el('coexVarianceRows'))el('coexVarianceRows').innerHTML=variances.length?variances.slice(0,25).map(r=>`<tr><td>${esc(r.weekEnd)}</td><td>${esc(r.branch)}</td><td class="num">${num.format(r.paidHours)}</td><td class="num">${num.format(r.ctPaidHours)}</td><td class="num">${num.format(r.paidHours-r.ctPaidHours)}</td><td class="num">${currency(r.billed)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">No billed-hour differences above 0.01 hours.</td></tr>';
- if(el('coexFinancialFoot'))el('coexFinancialFoot').textContent=internalOnly?'Cost allocation cannot be attributed to an HG/RHG-only customer view.':noData?'No complete CT work-week cost evidence within the selected period.':`${basisNote}: ${num.format(t.matchedHours)} matched hours in ${whole.format(t.qualified)} branch-weeks. Underutilisation is a salary cost proxy, not a realised saving. CT spend and unit-count volumes are distinct and require reconciliation. Worker-category display filters do not change financial totals. Do not add the four headline measures. ${coverage}.`;
+ if(el('coexFinancialFoot'))el('coexFinancialFoot').textContent=internalOnly?'Supplier cost cannot be assigned to an HG/RHG-only customer view.':noData?'No complete CT-costed work weeks in this selection.':'Modelled exposure, not confirmed cash savings. The headline cards overlap; the bridge shows the correct calculation.';
  const utilLabel=el('exUtil')?.closest('.kpi')?.querySelector('.label');
  if(utilLabel)utilLabel.textContent=state.basis==='days'?'Deployment-day utilisation':'Recorded-hours utilisation';
  const utilNote=el('exUtil')?.closest('.kpi')?.querySelector('.note');
@@ -289,13 +308,13 @@ function update(){
  if(el('coexUnusedTotal'))el('coexUnusedTotal').textContent=noData?'No CT data':`${num.format(t.unused)} unused hrs · ${currency(t.matchedPermanent+t.otherPermanent)}`;
  renderBreakdown('coexAgencyRows',t,[
   {label:'Potentially avoidable agency (matched)',value:t.potential,color:'#14879c'},
-  {label:'Capacity-unmatched (provisionally structural)',value:t.structural,color:'#6bcfb0'},
+  {label:'Other billed agency hours (not matched)',value:t.structural,color:'#6bcfb0'},
   {label:'Non-hourly adjustments',value:t.adjustments,color:'#d7c1a3'}]);
  renderBreakdown('coexPermanentRows',t,[
   {label:`Matched coexistence: ${num.format(t.matchedHours)} hrs`,value:t.matchedPermanent,color:'#14879c'},
   {label:`Other underutilisation: ${num.format(t.otherHours)} hrs`,value:t.otherPermanent,color:'#c1d7cd'}]);
  const summary=$('view-executive')?.querySelector('.heading.first p');if(summary)summary.textContent=`${basisNote} compared with net contracted capacity. Financial overlap is matched at the branch/week level.`;
- const note=$('view-executive')?.querySelector('.action-note');if(note)note.textContent=`Weekly cost model (${basisNote.toLowerCase()}): same-branch unit-count agency deployment > ${state.threshold} hours alongside unused permanent capacity. CT prices the agency cost; the permanent hourly rate remains a historical proxy. CT cost evidence ends 18 October 2026. ${coverage}. A deployment day counts as nine hours regardless of recorded hours. “Capacity-unmatched” does not prove agency use was necessary. Customer and worker display filters do not reallocate CT expenditure.`;
+ const note=$('view-executive')?.querySelector('.action-note');if(note)note.textContent=`Matched cost is based on spare permanent capacity alongside agency deployment in the same branch/week. See Assumptions & Calculations for the detailed rules, source differences and limitations.`;
  const trends=el('weeklyTrendChart'),matrix=el('opportunityMatrix');
  if(trends)trends.innerHTML=internalOnly?'<div class="chart-empty">CT customer attribution is unavailable for HG/RHG-only activity.</div>':chartWeekly(covered);
  if(matrix)matrix.innerHTML=internalOnly?'<div class="chart-empty">CT customer attribution is unavailable for HG/RHG-only activity.</div>':chartBranches(covered);

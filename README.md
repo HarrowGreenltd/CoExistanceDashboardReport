@@ -6,14 +6,14 @@
 
 The financial analysis is based on one **branch and complete CT-costed work week**. Unit count supplies **agency deployment hours and person-days**; CT supplies **independently billed hours and agency cost**. They are not identical. Where permanent contracted hours remain unused in the same branch/week as agency deployment, the model allocates the smaller hour quantity as matched overlap.
 
-The overview contains **four non-additive headline cards**, each with relevant money, hours and nine-hour-day equivalents:
+The overview contains **four non-additive headline cards**, each with relevant money, hours and nine-hour-day equivalents. Descriptions are deliberately short; each card has a hover/focus explanation. The **Assumptions & Calculations** tab carries the formulas, supporting cost allocations, source reconciliation and caveats:
 
 1. **Underutilised permanent capacity:** all unused permanent hours × the historical branch hourly proxy (plus hours and nine-hour-day equivalents).
 2. **Agency expenditure:** full CT billed spend (including non-hourly adjustments), with unit-count agency recorded hours and actual agency person-days. CT billed hours appear in the reconciliation panel.
 3. **Coexistence cost:** modelled agency cost allocated to matched agency deployment hours **plus** historical permanent cost on the corresponding unused permanent hours. The agency portion is labelled potential reduction, not achieved savings.
 4. **Other permanent underutilisation:** card 1 minus the **permanent-only portion** of card 3; hours and days follow the same subtraction.
 
-**Total economic inefficiency exposure** = all unused permanent capacity cost proxy + matched agency expenditure. It appears separately below the four cards and does not double count.
+**Total identified labour cost exposure** = all unused permanent capacity cost proxy + matched agency expenditure. It appears as a visible equation below the four cards, with pence shown so rounding cannot obscure the reconciliation. A second check shows that it also equals the overlapping labour cost plus the other unused permanent cost. The agency reduction opportunity appears in this bridge, rather than as a second large number inside card 3.
 
 * **Matched-hour coexistence cost** = costed CT agency expenditure on overlapping **unit-count** deployment hours **plus** historical permanent hourly cost proxy on **the same overlapping permanent hours**. The priced agency component is capped by CT's hourly cost for the branch/week.
 * **Potentially avoidable agency** = matched agency hourly cost. An opportunity indication, **not** verified savings.
@@ -35,7 +35,7 @@ Do not sum the coexistence KPI with total agency spend or total permanent-underu
 
 ## Deployment
 
-Place the **six** runtime files (`index.html`, `hr-rules.js`, `hr-hours.js`, `coexistence.js`, `workers-filter.js`, `coexistence-data.xlsx`) in the same authenticated HTTPS folder and open `index.html`. The browser loads SheetJS from jsDelivr. The six existing tabs are retained: Overview, Branches, People, Individual, Jobs & Customers, Refresh Data. Alternatively open `HG_Coexistence_Dashboard_Four_KPIs_Single_File.html` in a browser with access to jsDelivr; the source workbook is embedded.
+Place the **six** runtime files (`index.html`, `hr-rules.js`, `hr-hours.js`, `coexistence.js`, `workers-filter.js`, `coexistence-data.xlsx`) in the same authenticated HTTPS folder and open `index.html`. The browser loads SheetJS from jsDelivr. The original six tabs are retained: Overview, Branches, People, Individual, Jobs & Customers, Refresh Data; the new **Assumptions & Calculations** tab is added between Jobs & Customers and Refresh Data. Alternatively open `HG_Coexistence_Dashboard_Four_KPIs_Single_File.html` in a browser with access to jsDelivr; the source workbook is embedded.
 
 **Never deploy this employee-level workbook on public GitHub Pages or in a public GitHub repository.** Even an unlinked spreadsheet can be directly downloaded when hosted publicly. Use authenticated access and private file serving, or replace identifiable employee records with an approved aggregated dataset.
 
@@ -73,6 +73,7 @@ Source CT work-week costs end **18 October 2026**. Operational records extend th
 - **Search** filters detailed recorded activity, not branch/week CT costs.
 - **Workforce records** toggles **Permanent + agency / Exclude agency / Agency only** in branch, people, individual and job/customer activity drill-downs. People and individual views mark agency/external workers with an **A**. This display control intentionally leaves the four financial KPIs unchanged. Agency billings do not have a verified person-by-person rate allocation.
 - **Agency deployment vs billed hours** exposes the unit-count/CT variance by branch-week and exports every selected covered branch-week as CSV. The difference may reflect billing basis, rate period, hours definitions or time recording and must be checked, not automatically called an overcharge.
+- **Cost model information** is concentrated on the Assumptions & Calculations tab, including the agency-spend allocation and permanent-underutilisation breakdown previously shown under the Overview.
 - **Reset** restores the threshold to zero as well as regular view filters.
 
 ## Acceptance and limits
@@ -88,3 +89,5 @@ Open HR, CT and operations exceptions remain (e.g. mismatched IDs, HR tenure vio
 **18 Nov 2026: deployment-day calculation option and audit workbook.** The HTML defaults to **Deployed days × 9 hours**, with one qualifying permanent employee-date treated as nine deployed hours regardless of recorded job hours. A single filter switches back to **Recorded actual hours**. Both use the same HR-contracted capacity, employment dates and approved ADP-leave adjustments; weekly branch agency-cost matching is recalculated on the selected basis. The dual-basis Excel model is now included. This comparison is a planning assumption, not evidence that a scheduled nine-hour day was fully productive or that matched agency can be removed without service impact.
 
 **19 Nov 2026: four KPI cards, unit-count matching and agency worker drill-down.** Replaced CT invoice-hour matching with **unit-count agency deployment-hour matching** and capped cost attribution at actual CT hourly spend. Added underutilised permanent cost, agency spend, coexistence and other underutilisation with volume equivalents, total inefficiency strip, branch-week billing differences and CSV export. Retained all drill-down tabs and added agency worker inclusion filter and **A** markers. Previous V3 and 18 November model figures are historical and are **not** comparable on an unchanged method basis.
+
+**19 Nov 2026: simplified cost communication.** Replaced dense card explanations with plain English and information buttons, moved the potential agency reduction into a visible cost bridge, and renamed the aggregate **Total identified labour cost exposure**. The primary bridge uses exact pennies to avoid presenting a £1 mismatch from independently rounded values. Added a new Assumptions & Calculations tab containing the full component reconciliation, source assumptions, CT/unit-count differences and two detailed breakdowns. The model inputs and business rules did not change in this presentation revision.
