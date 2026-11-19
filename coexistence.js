@@ -164,7 +164,12 @@ function loadModel(){
 }
 const priorParse=parseWorkbook;
 parseWorkbook=function(buffer,name){state.ready=false;state.staff=null;priorParse(buffer,name);
- try{loadModel();filter()}catch(e){state.ready=false;state.error=e.message||String(e);showError('Costed coexistence unavailable: '+state.error);console.error(e);filter()}
+ try{loadModel()}
+ catch(e){state.ready=false;state.error=e.message||String(e);showError('Costed coexistence unavailable: '+state.error);console.error(e);filter();return}
+ // A presentation error must not invalidate already reconciled model data.
+ // Report rendering problems separately from missing or invalid source data.
+ try{filter()}
+ catch(e){state.error=e.message||String(e);showError('Dashboard display error: '+state.error);console.error(e)}
 };
 function selection(){const a=S.from||S.min,b=S.to||S.max;return state.rows.filter(r=>r.weekEnd>=a&&r.weekEnd<=b&&(S.branch==='All'||S.branch===r.branch));}
 function calculated(r){
@@ -260,13 +265,13 @@ function update(){
  const bridgeTotal=Math.round((bridgePermanent+bridgeAgency)*100)/100;
  const setCost=(id,v)=>{if(el(id))setMetric(id,display||currency(v))};
  setCost('exCoexist',t.coexist);setCost('exAvoidable',t.potential);setCost('brCoexist',t.coexist);setCost('coexOtherCost',t.otherPermanent);
- if(el('coexInefficiency'))el('coexInefficiency').textContent=display||moneyExact(bridgeTotal);
+ if(el('coexInefficiency'))el('coexInefficiency').textContent=display||moneyExact.format(bridgeTotal);
  setCost('coexHeadlineCost',t.coexist);
- if(el('coexReduction'))el('coexReduction').textContent=display||moneyExact(bridgeAgency);
+ if(el('coexReduction'))el('coexReduction').textContent=display||moneyExact.format(bridgeAgency);
  setCost('coexOtherHeadline',t.otherPermanent);
  setCost('coexPermCost',t.matchedPermanent+t.otherPermanent);
  setCost('coexAgencySpend',t.billed);
- if(el('coexBridgePerm'))el('coexBridgePerm').textContent=display||moneyExact(bridgePermanent);
+ if(el('coexBridgePerm'))el('coexBridgePerm').textContent=display||moneyExact.format(bridgePermanent);
  const setVolume=(id,v)=>{if(el(id))el(id).textContent=display||v};
  const equivalence=h=>`${num.format(h)} hours · ${num.format(h/9)} nine-hour day equivalents`;
  setVolume('coexPermVolume',equivalence(t.unused));
@@ -275,7 +280,7 @@ function update(){
  setVolume('coexOtherVolume',equivalence(t.otherHours));
  if(el('coexBridgeCheck'))el('coexBridgeCheck').textContent=display||`Cross-check: ${currency(t.coexist)} overlapping labour cost + ${currency(t.otherPermanent)} other unused permanent time = ${currency(t.coexist+t.otherPermanent)}.`;
  const methodMoney={methodUnused:bridgePermanent,methodMatchedPerm:t.matchedPermanent,methodAgencyOpp:bridgeAgency,methodCoexist:t.coexist,methodOther:t.otherPermanent,methodExposure:bridgeTotal,methodSpend:t.billed};
- for(const [id,value] of Object.entries(methodMoney))if(el(id))el(id).textContent=display||moneyExact(value);
+ for(const [id,value] of Object.entries(methodMoney))if(el(id))el(id).textContent=display||moneyExact.format(value);
  if(el('methodScope'))el('methodScope').textContent=`${S.branch==='All'?'All branches':S.branch} · ${dateLabel(S.from||S.min)}–${dateLabel(S.to||S.max)} · ${basisNote}`;
  if(el('methodVariance'))el('methodVariance').textContent=display||`${num.format(t.paidHours)} deployed agency hours against ${num.format(t.ctPaidHours)} CT billed hours: ${num.format(t.paidHours-t.ctPaidHours)} hours net difference.`;
  if(el('coexReconciliation'))el('coexReconciliation').style.display=internalOnly?'none':'block';
