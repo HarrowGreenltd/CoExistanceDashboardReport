@@ -1,53 +1,90 @@
-# Harrow Green — HR-confirmed Deployment Discipline Dashboard
+# Harrow Green | Coexistence Dashboard — Four-KPI Workforce Release
 
-Version: 16 November 2026. Restricted HR/operations data. Activity coverage: 1 January–31 October 2026; agency spending coverage: 44 weeks through 8 November 2026.
+**Updated 19 November 2026. Confidential HR, employee absence, operational deployment and financial information. PRIVATE HOSTING ONLY.**
 
-## Open the dashboard
+## What this version measures
 
-Keep `index.html`, `hr-rules.js` and `coexistence-data.xlsx` in the **same private directory** and open `index.html` from a private HTTP(S) host. The browser reads `coexistence-data.xlsx` alongside the page. A manual workbook upload remains available. The page loads its spreadsheet reader from jsDelivr, so internet access to that script is needed.
+The financial analysis is based on one **branch and complete CT-costed work week**. Unit count supplies **agency deployment hours and person-days**; CT supplies **independently billed hours and agency cost**. They are not identical. Where permanent contracted hours remain unused in the same branch/week as agency deployment, the model allocates the smaller hour quantity as matched overlap.
 
-**Do not publish these files to a public GitHub repository or public GitHub Pages site.** They contain employee identities, HR join/leaving dates and ADP-approved absence dates. Apply suitable access controls and retention requirements.
+The overview contains **four non-additive headline cards**, each with relevant money, hours and nine-hour-day equivalents:
 
-## Confirmed calculation decisions
+1. **Underutilised permanent capacity:** all unused permanent hours × the historical branch hourly proxy (plus hours and nine-hour-day equivalents).
+2. **Agency expenditure:** full CT billed spend (including non-hourly adjustments), with unit-count agency recorded hours and actual agency person-days. CT billed hours appear in the reconciliation panel.
+3. **Coexistence cost:** modelled agency cost allocated to matched agency deployment hours **plus** historical permanent cost on the corresponding unused permanent hours. The agency portion is labelled potential reduction, not achieved savings.
+4. **Other permanent underutilisation:** card 1 minus the **permanent-only portion** of card 3; hours and days follow the same subtraction.
 
-1. **Employment dates:** A person is considered employed for their entire HR joining month, unless an HR end date falls within it. An HR leaving date truncates the last month on that exact date. If no dated HR tenure is available, the original 0/1 monthly employment flag is the fallback. HR-dated records take precedence when flags contradict them.
-2. **Availability:** Every calendar day, including weekends, counts as one available person-day for each eligible *fixed* colleague, irrespective of contracted hours or shifts. This is a user-directed modelling convention, **not payroll FTE or contracted-hours capacity**.
-3. **Leave precedence:** An approved ADP absence date removes one available person-day. Diary annual-leave entries are not accepted as authoritative. Multi-day ADP entries are expanded to calendar dates. Partial-day hours are not prorated; work recorded on approved absence is retained as a conflict and excluded from the utilisation numerator.
-4. **Daily fixed-person utilisation:** Distinct, identified fixed-person worked dates (that are eligible and not ADP absence dates) ÷ the corresponding net available fixed-person days. Both are calculated over the selected activity date range and by home branch. A customer-mode filter changes which worked dates count, but it does not change HR employment or approved ADP availability.
-5. **Agency spend:** The nine branch costings from the finance report are summed per week with an Excel formula. The national hardcoded value is retained as an audit comparator. Agency spend is shown for its own accounting coverage and **does not follow the activity date filter**.
-6. **Cost exposure:** The old June financial model remains accessible as historic source data, but savings, avoidable agency cost and coexistence exposure **remain unverified**, not headline financial claims.
+**Total economic inefficiency exposure** = all unused permanent capacity cost proxy + matched agency expenditure. It appears separately below the four cards and does not double count.
 
-## Source-backed reconciliation
+* **Matched-hour coexistence cost** = costed CT agency expenditure on overlapping **unit-count** deployment hours **plus** historical permanent hourly cost proxy on **the same overlapping permanent hours**. The priced agency component is capped by CT's hourly cost for the branch/week.
+* **Potentially avoidable agency** = matched agency hourly cost. An opportunity indication, **not** verified savings.
+* **Capacity-unmatched agency (provisionally structural)** = remaining CT hourly agency spend after matching. Does not establish that use was justified or operationally necessary.
+* **Other permanent underutilisation** = unused permanent hours not included in matched overlap, valued separately using historical branch cost-rate proxies.
+* **Non-hourly CT adjustments** remain a separate category and are not misclassified as matched or structural agency.
 
-| Check | Reconciled result |
-| --- | ---: |
-| Gross fixed-person calendar days | 53,821 |
-| ADP absence dates on eligible fixed roster | 4,845 |
-| Net available fixed-person days | **48,976** |
-| ADP-approved source records | 3,128 |
-| Distinct ADP-approved person-dates | 7,357 |
-| Monthly employment flags overridden by dated HR tenure | 45 |
-| Roster employee IDs requiring monthly 0/1 fallback | 25 |
-| Work/ADP absence conflicts | 74 |
-| Unmatched permanent worked records excluded from the fixed-person numerator | 201 |
-| Unmatched agency/external worked records (not used in fixed numerator) | 8,210 |
-| Agency spending weeks with a difference from hardcoded national total | 13 of 44 |
-| Selected formula-driven agency spend | **£1,418,949.66** |
-| Original hardcoded national agency spend | £1,389,181.58 |
-| Hardcoded national less selected formula total | **−£29,768.08** |
+Do not sum the coexistence KPI with total agency spend or total permanent-underutilisation proxy: they contain overlapping components. A financial opportunity is a modelled signal; it cannot establish that permanent employees were available with the right skills, at the right location and time, or that agency hours could actually be removed.
 
-These are data-model checks, not a statement that the underlying HR or booking records have all been verified with their owners. In particular, *no recorded work* does not demonstrate that a colleague was operationally available, suitably skilled or substitutable for agency labour.
+## Files
 
-## Integrity and test status
+* `index.html`: dashboard shell, branch/people/calendar/customer drill-down and refresh UI.
+* `hr-rules.js`: approved HR identity, employment and absence rules.
+* `hr-hours.js`: evidenced weekly contract hours, 45-hour fallback and selected-period utilisation.
+* `coexistence.js`: strict branch-week coexistence cost model, four headline cards, agency source reconciliation, CSV export and **single-selector utilisation basis**. Defaults to a nine-hour deployed person-day; can switch to recorded actual hours.
+* `workers-filter.js`: worker-category filter for activity drill-downs and **A** badges for agency/external individuals. It deliberately does not alter the agency expenditure or permanent capacity headlines.
+* `coexistence-data.xlsx`: full original controlled source workbook, **unchanged** in this rebuild. **Its previous `Coexistence Model` worksheet retains the historical wider-exposure methodology** and must not be mistaken for the Version 3 cost headline.
+* `README.md`: this release guide. The earlier dual-basis Excel audit file used **CT hours as its matching input** and therefore does **not** reproduce the four-KPI dashboard's revised unit-count matching figures. Do not use it as the current financial control.
 
-- Independent workbook read-back established the daily 53,821 / 4,845 / 48,976 totals and the cached Excel agency formula sum.
-- An isolated dashboard logic test passed for the 48,976-day denominator, 4,584 October-day denominator, period filter, HR/ADP exception counts, identity exclusions, and the safeguard withholding financial exposure.
-- The earlier dashboard integrity regression test also passed.
-- Full headless Chromium testing **could not complete** in this execution environment because browser process creation was blocked; a visual and interactive acceptance run remains required on a permitted machine before deployment.
-- The dashboard includes a visible HR and data-integrity panel listing outstanding exceptions.
+## Deployment
 
-## Next controlled review
+Place the **six** runtime files (`index.html`, `hr-rules.js`, `hr-hours.js`, `coexistence.js`, `workers-filter.js`, `coexistence-data.xlsx`) in the same authenticated HTTPS folder and open `index.html`. The browser loads SheetJS from jsDelivr. The six existing tabs are retained: Overview, Branches, People, Individual, Jobs & Customers, Refresh Data. Alternatively open `HG_Coexistence_Dashboard_Four_KPIs_Single_File.html` in a browser with access to jsDelivr; the source workbook is embedded.
 
-Validate the 201 unidentified permanent work records, 74 work/ADP absence conflicts, 25 fallback staff records and 13 agency financial differences against HR, Operations and Finance owners. Resolve the 22 ambiguous worked identity matches before treating person-level figures as final. Confirm that the seven-day capacity convention remains useful for the intended executive KPI.
+**Never deploy this employee-level workbook on public GitHub Pages or in a public GitHub repository.** Even an unlinked spreadsheet can be directly downloaded when hosted publicly. Use authenticated access and private file serving, or replace identifiable employee records with an approved aggregated dataset.
 
-The workbook includes `Decision Log`, `HR Register`, `Employment Months`, `ADP Approved Dates`, `Capacity Daily`, `Activity Daily Summary` and `Agency Spend` for source tracing. It deliberately excludes NI numbers, birth dates and salaries.
+A fully controlled refresh requires a reprocessed and reconciled `coexistence-data.xlsx`, not a partially staged raw forecaster, CT or ADP file. The manual workbook selector is retained for private use.
+
+## Reference reconciliation: 41 complete costed work weeks to 18 October 2026
+
+| Measure | Deployed days × 9h (default) | Recorded actual hours |
+| --- | ---: | ---: |
+| Branch-weeks covered | 369 | 369 |
+| Branch-weeks with positive matched hours | 246 | 256 |
+| Total CT billed cost including non-hourly entries | £1,358,850.50 | £1,358,850.50 |
+| Agency person-days from unit-count activity | 8,019 | 8,019 |
+| Unit-count recorded agency deployment hours | 72,151.71 h | 72,151.71 h |
+| CT billed hourly agency units | 69,503.78 h | 69,503.78 h |
+| **Net deployment – billed hour difference** | **+2,647.93 h** | **+2,647.93 h** |
+| Potential agency spend reduction opportunity | £480,001.62 | £488,912.37 |
+| Matched spare permanent hours | 26,322.22 h | 26,953.38 h |
+| Matched permanent cost proxy | £224,296.81 | £230,237.31 |
+| **Matched-hour coexistence cost proxy** | **£704,298.43** | **£719,149.68** |
+| Other unused permanent cost proxy | £242,046.88 | £286,176.73 |
+| **Total inefficiency exposure proxy** | **£946,345.32** | **£1,005,326.42** |
+| Total unused permanent hours | 50,317.03 h | 56,339.33 h |
+| **All unused permanent cost proxy** | **£466,343.70** | **£516,414.04** |
+
+Source CT work-week costs end **18 October 2026**. Operational records extend through 31 October 2026 and the separate formula-derived agency spend controls through 8 November 2026. The periods **must not be silently combined**. For date selections entirely after the CT coverage the financial KPIs say **No CT data**, not £0; selections spanning covered and uncovered weeks show partial coverage.
+
+## Filter behaviour
+
+- **Branch** changes cost, activity and people views to the selected branch.
+- **From/To** selects costed weeks by **week-ending date**. A partial calendar week must not be priced as a full week without qualification.
+- **Agency threshold (hours/week)** applies to **unit-count agency deployment hours** in each branch-week (default 0); it changes matched vs unmatched allocation but not original CT billed cost.
+- **Utilisation calculation basis** is one selector shared by the financial cost model and deployment utilisation: default **Deployed days × 9 hours** (a qualifying permanent employee-date with any positive recorded hours uses a full nine-hour slot), or **Recorded actual hours**. Weekly available capacity retains the source contracted-hour and approved-leave rules under both methods.
+- **Customer mode** filters recorded diary jobs/hours. The CT cost source does **not** provide confirmed customer attribution. Therefore the financial allocation is independent of HG/RHG display mode; HG/RHG-only cost cards show `n.a.` rather than falsely allocating supplier costs to internal references.
+- **Search** filters detailed recorded activity, not branch/week CT costs.
+- **Workforce records** toggles **Permanent + agency / Exclude agency / Agency only** in branch, people, individual and job/customer activity drill-downs. People and individual views mark agency/external workers with an **A**. This display control intentionally leaves the four financial KPIs unchanged. Agency billings do not have a verified person-by-person rate allocation.
+- **Agency deployment vs billed hours** exposes the unit-count/CT variance by branch-week and exports every selected covered branch-week as CSV. The difference may reflect billing basis, rate period, hours definitions or time recording and must be checked, not automatically called an overcharge.
+- **Reset** restores the threshold to zero as well as regular view filters.
+
+## Acceptance and limits
+
+The revised reference values above are independently recalculated from the embedded source workbook by `verify_four_kpis.py` (in the source ZIP). Unit-count agency hours reconcile to its daily activity records, while CT billed hours differ by **2,647.93 hours**. The present release passed script syntax and arithmetic checks. **Full visual browser acceptance remains unverified** because the available Chromium instance cannot create its process socket.
+
+Open HR, CT and operations exceptions remain (e.g. mismatched IDs, HR tenure violations, ADP conflict dates, provisional CT branch mappings and historical permanent rate calibration). None was silently corrected in this presentation/model rebuild. Strict overlap does not verify employee role/skill, shift, travel or customer-specific substitution. The result is modelled exposure, not proven avoidable expenditure or cash savings.
+
+## Release change log
+
+**V3 / 17 Nov 2026:** Replaced the V2 broad coexistence-week £952,399 headline with a strict matched-hour £758,898 headline. Added a separate agency cost allocation (potential £523,257; capacity-unmatched £826,394; adjustments £9,199), matched-vs-other permanent underutilisation, branch allocation table, priority branch-week queue, dynamic threshold, and a standalone formula-driven source-audit workbook. Existing activity, calendars and source data retained.
+
+**18 Nov 2026: deployment-day calculation option and audit workbook.** The HTML defaults to **Deployed days × 9 hours**, with one qualifying permanent employee-date treated as nine deployed hours regardless of recorded job hours. A single filter switches back to **Recorded actual hours**. Both use the same HR-contracted capacity, employment dates and approved ADP-leave adjustments; weekly branch agency-cost matching is recalculated on the selected basis. The dual-basis Excel model is now included. This comparison is a planning assumption, not evidence that a scheduled nine-hour day was fully productive or that matched agency can be removed without service impact.
+
+**19 Nov 2026: four KPI cards, unit-count matching and agency worker drill-down.** Replaced CT invoice-hour matching with **unit-count agency deployment-hour matching** and capped cost attribution at actual CT hourly spend. Added underutilised permanent cost, agency spend, coexistence and other underutilisation with volume equivalents, total inefficiency strip, branch-week billing differences and CSV export. Retained all drill-down tabs and added agency worker inclusion filter and **A** markers. Previous V3 and 18 November model figures are historical and are **not** comparable on an unchanged method basis.

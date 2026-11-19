@@ -71,7 +71,7 @@
     if(!panel){panel=document.createElement('article');panel.id='hrAuditSummary';panel.className='panel';panel.style.margin='18px 0';panel.style.padding='20px 24px';target.insertAdjacentElement('afterend',panel)}
     const a=hr.audit;
     panel.innerHTML=`<h3 style="margin:0 0 10px">HR and data integrity — remaining exceptions</h3>
-      <p style="margin:0 0 10px">Applied: full joining month; HR leaving date; all seven calendar days eligible; approved ADP absence overrides diary leave; agency spend uses the nine-branch formula sum.</p>
+      <p style="margin:0 0 10px">Applied: recorded HR start and leaving dates where available; seven potential deployment days; approved ADP absence overrides diary leave; agency spend uses the nine-branch formula sum. Contracted-hours calculation is supplied by the evidence-first overlay.</p>
       <p style="margin:0"><strong>${whole.format(a.overriddenMonths)}</strong> HR overrides of monthly flags · <strong>${whole.format(a.fallbackStaff)}</strong> roster IDs without dated HR tenure · <strong>${whole.format(a.workedLeave)}</strong> work/ADP absence conflicts · <strong>${whole.format(a.unmatchedPermanent)}</strong> unmatched permanent work records · <strong>${whole.format(a.unmatchedAgency)}</strong> unmatched agency work records · <strong>${whole.format(a.agencyVarianceWeeks)}</strong> agency accounting weeks with source variance.</p>
       <p style="margin:10px 0 0;font-size:12px">Exceptions are retained for review; unmatched permanent work records are excluded from daily utilisation. Day-based availability is a modelling convention, not contractual capacity.</p>`;
   }
