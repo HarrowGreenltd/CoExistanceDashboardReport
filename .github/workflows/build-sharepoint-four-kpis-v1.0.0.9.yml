@@ -22,7 +22,7 @@ jobs:
       - name: Generate pinned CSP-safe source and verify
         run: npm run prepare-dashboard && npm run check && node --check src/webparts/coexistenceDashboard/dashboardRuntime.js
       - name: Run supplied financial UI regression test
-        run: mkdir -p ../dashboard_html && cp ../coexistence.js ../dashboard_html/coexistence.js && node ../test_four_kpi_runtime.cjs
+        run: mkdir -p ../../dashboard_html && cp ../coexistence.js ../../dashboard_html/coexistence.js && node ../test_four_kpi_runtime.cjs
       - name: Official Microsoft SPFx production build
         run: npm run build
       - uses: actions/upload-artifact@v4
