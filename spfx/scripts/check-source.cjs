@@ -7,6 +7,6 @@ if(cfg.solution.version!=='1.0.0.9'||cfg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-
 if(JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Previously functioning host declaration changed');
 const html=read('src/webparts/coexistenceDashboard/dashboardMarkup.ts'),runtime=read('src/webparts/coexistenceDashboard/dashboardRuntime.js'),wp=read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.ts');
 if(/<script\b/i.test(html)||/srcdoc|createElement\s*\(\s*['"]iframe/.test(wp))throw Error('CSP-blocked loader regression');
-for(const marker of ['coexHeadline','coexReduction','coexInefficiency','coexBasis','methodExposure','Agency CT Weekly','Contract Hours Weekly','workerMode','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(marker)&&!html.includes(marker))throw Error('Four-KPI UI or calculation feature missing: '+marker);
+for(const marker of ['coexHeadline','coexReduction','coexInefficiency','coexBasis','methodExposure','Agency CT Source','Contract Hours Weekly','workerMode','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(marker)&&!html.includes(marker))throw Error('Four-KPI UI or calculation feature missing: '+marker);
 if(!runtime.includes('root.getElementById')||!runtime.includes('root.querySelector'))throw Error('Shadow-root DOM scoping missing');
 console.log('Exact Four-KPI v3 model modules, selectors, four headline IDs, package version and original IDs checked.');
