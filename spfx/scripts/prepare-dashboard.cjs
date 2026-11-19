@@ -34,7 +34,7 @@ fs.writeFileSync(path.join(dest,'dashboardMarkup.ts'),'export const DASHBOARD_BO
 const runtime="import * as XLSX from 'xlsx';\nexport function initializeDashboard(workbook,root){\n"+
 "if(!XLSX||!XLSX.read)throw Error('XLSX reader unavailable');\n"+
 "const metadata=XLSX.read(workbook,{type:'array',bookSheets:true});\n"+
-"const required=['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','Contract Hours Weekly','Agency CT Weekly','Activity Daily Summary'];\n"+
+"const required=['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','Contract Hours Weekly','Agency CT Source','Weekly Coexistence','Activity Daily Summary'];\n"+
 "const missing=required.filter(n=>!metadata.SheetNames.includes(n));\n"+
 "if(missing.length)throw Error('The SharePoint workbook is not the Four-KPIs-v3 source workbook. Missing: '+missing.join(', ')+'. Upload the accompanying coexistence-data.xlsx to the secured folder.');\n"+
 app+"\n"+overlays+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n}\n";
