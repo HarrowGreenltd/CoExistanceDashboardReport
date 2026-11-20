@@ -30,14 +30,14 @@ export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<I
       const response=await this.context.spHttpClient.get(endpoint,SPHttpClient.configurations.v1,{headers:{Accept:'application/octet-stream'}});
       if(!response.ok)throw new Error('SharePoint workbook request HTTP '+response.status);
       const workbook=await response.arrayBuffer();
-      const sha=Array.from(new Uint8Array(await window.crypto.subtle.digest('SHA-256',workbook))).map(n=>n.toString(16).padStart(2,'0')).join('');
+      const sha=Array.from(new Uint8Array(await window.crypto.subtle.digest('SHA-256',workbook))).map(n=>('0'+n.toString(16)).slice(-2)).join('');
       const audit='Source '+workbook.byteLength+' bytes · SHA-256 '+sha.slice(0,16)+' · expected '+EXPECTED_BYTES+' bytes / '+EXPECTED_SHA256.slice(0,16);
       if(sha!==EXPECTED_SHA256)throw new Error('Workbook CONTENT mismatch at '+FILE+'. '+audit+'. The app will not show financial results from an unverified data file. Please check the exact SharePoint file, not its name.');
       if(serial!==this._loadSerial)return;
       if(workbook.byteLength<100)throw new Error('Workbook appears empty.');
-      const host=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;
-      if(host.shadowRoot)host.shadowRoot.innerHTML='';
-      const shadow=host.shadowRoot||host.attachShadow({mode:'open'});
+      const dashboardHost=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;
+      if(dashboardHost.shadowRoot)dashboardHost.shadowRoot.innerHTML='';
+      const shadow=dashboardHost.shadowRoot||dashboardHost.attachShadow({mode:'open'});
       const style=document.createElement('style');style.textContent=DASHBOARD_CSS;shadow.appendChild(style);
       const view=document.createElement('div');view.className='hg-coex-view';view.innerHTML=DASHBOARD_BODY;shadow.appendChild(view);
       initializeDashboard(workbook,shadow);
