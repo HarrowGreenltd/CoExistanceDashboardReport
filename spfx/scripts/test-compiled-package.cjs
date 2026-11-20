@@ -10,12 +10,12 @@ const office=require('./test-package-normalisation.cjs').officeRepack(source);
 const amd='window.define=function(name,deps,factory){function Stub(){this.domElement=document.getElementById("host");this.context={spHttpClient:{get:async()=>({ok:true,arrayBuffer:async()=>window.__bytes})}};}window.__component=factory({BaseClientSideWebPart:Stub},{SPHttpClient:{configurations:{v1:{}}}});};';
 function number(x){return Number(String(x||'').replace(/[^0-9.]/g,''))}
 async function run(page,buffer,label){
- await page.setContent('<div id="host"></div>');await page.addScriptTag({content:amd});await page.addScriptTag({content:bundle});
+ await page.setContent('<div id="host"></div>');await page.evaluate(()=>{window.__COEX_TEST=true});await page.addScriptTag({content:amd});await page.addScriptTag({content:bundle});
  await page.evaluate(b=>{window.__bytes=Uint8Array.from(atob(b),c=>c.charCodeAt(0)).buffer},Buffer.from(buffer).toString('base64'));
  await page.evaluate(()=>{const W=window.__component.default;window.__app=new W();window.__app.render()});
  await page.waitForFunction(()=>{const s=document.querySelector('.hg-coex-status')?.textContent||'';return s.includes('Validated SharePoint workbook')||s.includes('validation failed')},{timeout:120000});
  const data=await page.evaluate(()=>{const s=document.querySelector('.hg-coex-status')?.textContent||'',r=document.querySelector('.hg-coex-dashboard')?.shadowRoot,$=id=>r?.getElementById(id);return{status:s,branches:r?.querySelectorAll('#pills button')?.length,people:$('peActive')?.textContent,jobs:$('joJobs')?.textContent,exposure:$('coexInefficiency')?.textContent,trend:!!$('weeklyTrendChart')?.querySelector('svg'),calendar:($('person')?.options?.length||0)>0}});
- console.log(label,JSON.stringify(data));
+ console.log(label,JSON.stringify(data));console.log('SOURCE-TRACE',JSON.stringify(await page.evaluate(()=>window.__COEX_TRACE||null)));
  assert(data.status.startsWith('Validated SharePoint workbook'),label+' failed validation');
  assert.equal(data.branches,10);assert.equal(number(data.people),652);assert.equal(number(data.jobs),3445);
  assert.equal(number(data.exposure),946345.32);assert(data.trend&&data.calendar);

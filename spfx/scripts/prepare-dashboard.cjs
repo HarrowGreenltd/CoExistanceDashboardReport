@@ -45,6 +45,8 @@ const runtime="import * as XLSX from 'xlsx/dist/xlsx.full.min.js';\nexport funct
 "const required=['Capacity Daily','Employment Months','ADP Approved Dates','Agency Spend','Contract Hours Weekly','Agency CT Source','Weekly Coexistence','Activity Daily Summary'];\n"+
 "const missing=required.filter(n=>!metadata.SheetNames.includes(n));\n"+
 "if(missing.length)throw Error('The SharePoint workbook is not the Four-KPIs-v3 source workbook. Missing: '+missing.join(', ')+'. Upload the accompanying coexistence-data.xlsx to the secured folder.');\n"+
-app+"\n"+overlays+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n}\n";
+app+"\n"+overlays+"\nparseWorkbook(workbook.slice(0),'SharePoint: Coexistence Dashboard/coexistence-data.xlsx');\n"+
+"if(window.__COEX_TEST){window.__COEX_TRACE={activity:S.activity.length,filtered:S.filtered.length,min:S.min,max:S.max,baselineBranches:S.baseline.map(x=>x.branch),activityBranches:[...new Set(S.activity.map(x=>x.homeBranch))].slice(0,16),activeBranches:allBranches(),peopleCount:new Set(S.activity.map(x=>x.name)).size,exampleStatuses:[...new Set(S.activity.map(x=>x.status))],exampleCodes:[...new Set(S.activity.map(x=>x.type))],sheets:S.workbook.SheetNames.slice(0,26)};}\n"+
+"}\n";
 fs.writeFileSync(path.join(dest,'dashboardRuntime.js'),runtime);
 console.log('Pinned Four-KPIs-v3 HTML and exact four calculation/worker modules prepared for CSP-safe SPFx bundle.');
