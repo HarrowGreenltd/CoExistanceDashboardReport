@@ -3,11 +3,12 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const dir=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(dir,p),'utf8');
 const cfg=JSON.parse(read('config/package-solution.json'));
 const manifest=JSON.parse(read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.manifest.json'));
-if(cfg.solution.version!=='1.0.0.10'||cfg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e'||cfg.solution.features[0].id!=='e70bcffe-ef1c-47b3-9339-19102bb2eb61'||manifest.id!=='1f11da6f-4a1a-45c4-ac4b-ca68427312ce')throw Error('Identity/version mismatch');
+if(cfg.solution.version!=='1.0.0.11'||cfg.solution.id!=='4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e'||cfg.solution.features[0].id!=='e70bcffe-ef1c-47b3-9339-19102bb2eb61'||manifest.id!=='1f11da6f-4a1a-45c4-ac4b-ca68427312ce')throw Error('Identity/version mismatch');
 if(JSON.stringify(manifest.supportedHosts)!=='["SharePointWebPart"]')throw Error('Previously functioning host declaration changed');
 const html=read('src/webparts/coexistenceDashboard/dashboardMarkup.ts'),runtime=read('src/webparts/coexistenceDashboard/dashboardRuntime.js'),wp=read('src/webparts/coexistenceDashboard/CoexistenceDashboardWebPart.ts');
 if(/<script\b/i.test(html)||/srcdoc|createElement\s*\(\s*['"]iframe/.test(wp))throw Error('CSP-blocked loader regression');
 for(const marker of ['coexHeadline','coexReduction','coexInefficiency','coexBasis','methodExposure','Agency CT Source','Contract Hours Weekly','workerMode','parseWorkbook(workbook.slice(0)'])if(!runtime.includes(marker)&&!html.includes(marker))throw Error('Four-KPI UI or calculation feature missing: '+marker);
 if(!runtime.includes('const document={')||!runtime.includes('querySelector:selector=>root.querySelector(selector)'))throw Error('Shadow-root document facade missing');
 if(/\broot\.(?:getElementById|querySelector)/.test(read('../coexistence.js')))throw Error('Original dashboard calculations were unexpectedly rewritten');
+if(!wp.includes('EXPECTED_SHA256')||!wp.includes('Live validation failed'))throw Error('Live source diagnostic missing');
 console.log('Exact Four-KPI v3 model modules, selectors, four headline IDs, package version and original IDs checked.');
