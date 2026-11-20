@@ -1,0 +1,38 @@
+name: Build Four KPIs v1.0.0.11 diagnostic
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/sharepoint-four-kpis-diagnostic-v1.0.0.11]
+    paths: ['spfx/**','.github/workflows/build-sharepoint-four-kpis-v1.0.0.12.yml']
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: spfx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install SPFx dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate pinned CSP-safe source and verify
+        run: npm run prepare-dashboard && npm run check && node --check src/webparts/coexistenceDashboard/dashboardRuntime.js
+      - name: Run supplied financial UI regression test
+        run: mkdir -p ../../dashboard_html && cp ../coexistence.js ../workers-filter.js ../../dashboard_html/ && node ../test_four_kpi_runtime.cjs
+      - name: Browser acceptance against exact v3 workbook
+        run: npm install --no-save --no-audit --no-fund playwright@1.56.1 && npx playwright install chromium --with-deps && node scripts/test-browser-parity.cjs
+      - name: Official Microsoft SPFx production build
+        run: npm run build
+      - name: Verify OOXML package normalisation
+        run: node scripts/test-package-normalisation.cjs
+      - name: Test actual compiled package in Chromium
+        run: node scripts/test-compiled-package.cjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Coexistence-SharePoint-Four-KPIs-v1.0.0.11
+          path: spfx/sharepoint/solution/*.sppkg
+          if-no-files-found: error

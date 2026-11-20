@@ -2,18 +2,17 @@ import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { DASHBOARD_BODY, DASHBOARD_CSS } from './dashboardMarkup';
 import { initializeDashboard } from './dashboardRuntime';
+import { normalizeWorkbookPackage } from './workbookPackage';
 
 export interface ICoexistenceDashboardWebPartProps {}
 const SITE='https://harrowgreen.sharepoint.com/sites/Managers2';
 const FOLDER='/sites/Managers2/Shared Documents/Coexistence Dashboard';
 const FILE=FOLDER+'/coexistence-data.xlsx';
-const EXPECTED_SHA256='b166ea2e9a456dfaaab0e2ee9f46d7dddfc57bcffd19867a3b4bbc7d38753cfa';
-const EXPECTED_BYTES=5876298;
 const LINK=SITE+'/Shared%20Documents/Forms/AllItems.aspx?id='+encodeURIComponent(FOLDER);
 export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<ICoexistenceDashboardWebPartProps>{
   private _loadSerial:number=0;
   public render():void{
-    this.domElement.innerHTML='<div class="hg-coex-host"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0"><strong style="color:#14879c">Coexistence Dashboard</strong><span>SPFx 1.0.0.11</span><a href="'+LINK+'" target="_blank" rel="noopener noreferrer">Open data folder</a><button class="hg-coex-reload" type="button">Reload data</button></div><div class="hg-coex-status" role="status" aria-live="polite">Loading workbook…</div><div class="hg-coex-dashboard"></div></div>';
+    this.domElement.innerHTML='<div class="hg-coex-host"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0"><strong style="color:#14879c">Coexistence Dashboard</strong><span>SPFx 1.0.0.12</span><a href="'+LINK+'" target="_blank" rel="noopener noreferrer">Open data folder</a><button class="hg-coex-reload" type="button">Reload data</button></div><div class="hg-coex-status" role="status" aria-live="polite">Loading workbook…</div><div class="hg-coex-dashboard"></div></div>';
     (this.domElement.querySelector('.hg-coex-reload') as HTMLButtonElement).addEventListener('click',()=>void this._load());
     void this._load();
   }
@@ -23,32 +22,41 @@ export default class CoexistenceDashboardWebPart extends BaseClientSideWebPart<I
   }
   private async _load():Promise<void>{
     const serial=++this._loadSerial;
+    const host=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;
+    if(host)host.style.display='';
     try{
-      this._status('Reading SharePoint Coexistence workbook…');
-      const host=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;if(host)host.style.display='';
+      this._status('Reading and validating SharePoint workbook…');
       const endpoint=SITE+"/_api/web/GetFileByServerRelativePath(decodedUrl=@file)/$value?@file='"+encodeURIComponent(FILE)+"'&coexRefresh="+Date.now();
       const response=await this.context.spHttpClient.get(endpoint,SPHttpClient.configurations.v1,{headers:{Accept:'application/octet-stream'}});
       if(!response.ok)throw new Error('SharePoint workbook request HTTP '+response.status);
-      const workbook=await response.arrayBuffer();
-      const sha=Array.from(new Uint8Array(await window.crypto.subtle.digest('SHA-256',workbook))).map(n=>('0'+n.toString(16)).slice(-2)).join('');
-      const audit='Source '+workbook.byteLength+' bytes · SHA-256 '+sha.slice(0,16)+' · expected '+EXPECTED_BYTES+' bytes / '+EXPECTED_SHA256.slice(0,16);
-      if(sha!==EXPECTED_SHA256)throw new Error('Workbook CONTENT mismatch at '+FILE+'. '+audit+'. The app will not show financial results from an unverified data file. Please check the exact SharePoint file, not its name.');
+      const input=await response.arrayBuffer();
       if(serial!==this._loadSerial)return;
-      if(workbook.byteLength<100)throw new Error('Workbook appears empty.');
+      if(input.byteLength<100)throw new Error('Workbook appears empty.');
+      const prep=normalizeWorkbookPackage(input);
+      if(serial!==this._loadSerial)return;
       const dashboardHost=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;
       if(dashboardHost.shadowRoot)dashboardHost.shadowRoot.innerHTML='';
       const shadow=dashboardHost.shadowRoot||dashboardHost.attachShadow({mode:'open'});
       const style=document.createElement('style');style.textContent=DASHBOARD_CSS;shadow.appendChild(style);
       const view=document.createElement('div');view.className='hg-coex-view';view.innerHTML=DASHBOARD_BODY;shadow.appendChild(view);
-      initializeDashboard(workbook,shadow);
+      initializeDashboard(prep.workbook,shadow);
+      // Fail closed: partial DOM data previously produced materially incorrect costs.
       const branches=shadow.querySelectorAll('#pills button').length;
-      const people=shadow.getElementById('peActive')?.textContent||'';
-      const jobs=shadow.getElementById('joJobs')?.textContent||'';
-      const scope=shadow.getElementById('status')?.textContent||'';
-      const pass=branches===10 && Number(people.replace(/,/g,''))>0 && Number(jobs.replace(/,/g,''))>0;
-      if(!pass)throw new Error('Live validation failed: workbook bytes MATCH, but dashboard output differs. Branch buttons='+branches+', active people='+people+', jobs='+jobs+'. This points to a SharePoint runtime/caching issue, not the Excel file. Internal status='+scope);
-      this._status('Verified matching v3 source · '+audit+' · branch buttons='+branches+' · people='+people+' · jobs='+jobs);
-    }catch(error){if(serial===this._loadSerial){const host=this.domElement.querySelector('.hg-coex-dashboard') as HTMLElement;if(host)host.style.display='none';this._status('Dashboard startup failed: '+String(error),true);}}
+      const people=Number((shadow.getElementById('peActive')?.textContent||'').replace(/,/g,''));
+      const jobs=Number((shadow.getElementById('joJobs')?.textContent||'').replace(/,/g,''));
+      const trend=Boolean(shadow.getElementById('weeklyTrendChart')?.querySelector('svg'));
+      const errors=shadow.getElementById('error')?.textContent||'';
+      if(branches!==10||!(people>0)||!(jobs>0)||!trend||errors){
+        throw new Error('Live source validation failed: '+branches+' branch choices, '+people+' active workers, '+jobs+' jobs, CT trend='+trend+
+          (errors?', dashboard error: '+errors:'')+
+          '. Source '+prep.originalBytes+' bytes; package-normalized='+prep.normalized+'. Financial results withheld.');
+      }
+      this._status('Validated SharePoint workbook · '+prep.originalBytes+' bytes'+(prep.normalized?' · Excel package metadata normalised in memory':' · original package already compatible')+' · 9 branches · '+people+' workers · '+jobs+' jobs');
+    }catch(error){
+      if(serial!==this._loadSerial)return;
+      if(host)host.style.display='none';
+      this._status('Coexistence data validation failed: '+String(error),true);
+    }
   }
   protected onDispose():void{this._loadSerial++;super.onDispose();}
 }

@@ -3,7 +3,7 @@
   "solution": {
     "name": "harrowgreen-coexistence-dashboard-client-side-solution",
     "id": "4ed72c1a-2ac5-4f2c-bc22-3d67db9d1c9e",
-    "version": "1.0.0.11",
+    "version": "1.0.0.12",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "features": [
