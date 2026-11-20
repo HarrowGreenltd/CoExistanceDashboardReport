@@ -32,7 +32,7 @@ if(!sourceBody)throw Error('Dashboard body missing');
 const body=sourceBody.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
 if(/<script\b/i.test(body)||!body.includes('coexHeadline')){if(/<script\b/i.test(body))throw Error('Script tag in body');}
 fs.writeFileSync(path.join(dest,'dashboardMarkup.ts'),'export const DASHBOARD_BODY:string='+JSON.stringify(body)+';\nexport const DASHBOARD_CSS:string='+JSON.stringify(css)+';\n');
-const runtime="import * as XLSX from 'xlsx';\nexport function initializeDashboard(workbook,root){\n"+
+const runtime="import * as XLSX from 'xlsx/dist/xlsx.full.min.js';\nexport function initializeDashboard(workbook,root){\n"+
 "const sourceDocument=window.document;\n"+
 "const document={\n"+
 "getElementById:id=>root.getElementById(id),\n"+
