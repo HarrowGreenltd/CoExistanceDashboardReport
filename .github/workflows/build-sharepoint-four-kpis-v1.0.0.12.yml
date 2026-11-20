@@ -1,8 +1,8 @@
-name: Build Four KPIs v1.0.0.11 diagnostic
+name: Build Four KPIs v1.0.0.12 workbook package parity
 on:
   workflow_dispatch:
   push:
-    branches: [fix/sharepoint-four-kpis-diagnostic-v1.0.0.11]
+    branches: [fix/sharepoint-four-kpis-package-parity-v1.0.0.12]
     paths: ['spfx/**','.github/workflows/build-sharepoint-four-kpis-v1.0.0.12.yml']
 permissions:
   contents: read
@@ -33,6 +33,6 @@ jobs:
         run: node scripts/test-compiled-package.cjs
       - uses: actions/upload-artifact@v4
         with:
-          name: Coexistence-SharePoint-Four-KPIs-v1.0.0.11
+          name: Coexistence-SharePoint-Four-KPIs-v1.0.0.12
           path: spfx/sharepoint/solution/*.sppkg
           if-no-files-found: error
