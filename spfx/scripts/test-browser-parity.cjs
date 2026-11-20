@@ -15,7 +15,7 @@ async function main(){
   const body=JSON.parse(markup.match(/export const DASHBOARD_BODY:string=(.+);/)[1]);
   const css=JSON.parse(markup.match(/export const DASHBOARD_CSS:string=(.+);/)[1]);
   let code=fs.readFileSync(path.join(root,'src/webparts/coexistenceDashboard/dashboardRuntime.js'),'utf8')
-    .replace(/^import \* as XLSX from 'xlsx';/,'')
+    .replace(/^import \* as XLSX from 'xlsx(?:\/dist\/xlsx\.full\.min\.js)?';/,'')
     .replace('export function initializeDashboard','function initializeDashboard');
   code+='\nwindow.initializeDashboard=initializeDashboard;\n';
   await page.addScriptTag({content:code});
