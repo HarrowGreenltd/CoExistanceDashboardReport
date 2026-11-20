@@ -20,7 +20,8 @@
       "es2017.object"
     ],
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    "downlevelIteration": true
   },
   "include": [
     "src/**/*.ts"
